@@ -5,20 +5,21 @@ import Quiz from "./pages/Quiz";
 import Leaderboard from "./pages/Leaderboard";
 import Store from "./pages/Store";
 import MyWallet from "./pages/MyWallet";
+import Profile from "./pages/Profile";
+import leaderboardData from "./data/mockData";
+
 import { PowerUpProvider } from "./contexts/PowerUpContext";
 import { StreakProvider } from "./contexts/StreakContext";
 import { PiWalletProvider } from "./contexts/PiWalletContext";
 import { TransactionHistoryProvider } from "./contexts/TransactionHistoryContext";
+import { PiAuthProvider } from "./contexts/PiAuthContext";
+
 import { Toaster } from "sonner";
 import React from "react";
-import leaderboardData from "./data/mockData";
-import Profile from "./pages/Profile";
-import { PiAuthProvider } from "./contexts/PiAuthContext";
-import useUserDataSync from "./utils/useUserDataSync"; // Import the hook
+
+import GlobalSyncManager from "./components/GlobalSyncManager"; // ✅ new import
 
 function App() {
-  useUserDataSync(); // Call the hook to sync user data
-
   return (
     <TransactionHistoryProvider>
       <PiWalletProvider>
@@ -26,6 +27,9 @@ function App() {
           <PowerUpProvider>
             <PiAuthProvider>
               <Router>
+                {/* ✅ Sync manager is inside all providers */}
+                <GlobalSyncManager />
+
                 <Layout>
                   <Routes>
                     <Route path="/" element={<Home />} />
@@ -40,6 +44,7 @@ function App() {
                     <Route path="/wallet" element={<MyWallet />} />
                   </Routes>
                 </Layout>
+
                 <Toaster
                   position="top-center"
                   theme="dark"

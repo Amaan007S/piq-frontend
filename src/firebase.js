@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAvGanK7esYKFqJjNmQr6ga_4V241y-W0E",
+  apiKey: "AIzaSyAepTxp-PB7zc-NWqxDHH5IAbAwR7TO5Nk",
   authDomain: "chainpiq.firebaseapp.com",
   projectId: "chainpiq",
   storageBucket: "chainpiq.appspot.com",

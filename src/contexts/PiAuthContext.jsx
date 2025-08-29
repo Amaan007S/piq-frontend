@@ -6,7 +6,6 @@ const PiAuthContext = createContext();
 
 export const usePiAuth = () => {
   const context = useContext(PiAuthContext);
-  // Fallback to prevent destructuring undefined
   if (!context) {
     return {
       user: null,
@@ -38,7 +37,7 @@ export const PiAuthProvider = ({ children }) => {
         setAccessToken(result.accessToken);
         setAuthStatus("success");
 
-        // 🔥 Firestore: Create user doc if missing, otherwise update schema if outdated
+        // 🔥 Firestore: Create user doc if missing; do NOT overwrite existing data
         const userRef = doc(db, "users", piUser.username);
         const userSnap = await getDoc(userRef);
 
@@ -74,16 +73,33 @@ export const PiAuthProvider = ({ children }) => {
         };
 
         if (!userSnap.exists()) {
-          // ✅ New user → create doc
           await setDoc(userRef, defaultUserData);
           console.log("✅ New user created in Firestore.");
         } else {
-          // ✅ Existing user → merge in case schema changed (future proof)
-          await updateDoc(userRef, {
-            ...defaultUserData,
-            username: piUser.username, // ensure username stays synced
-          });
           console.log("🔁 Existing user loaded from Firestore.");
+          // 🩹 Backfill only missing fields (no destructive overwrite)
+          const data = userSnap.data() || {};
+          const patch = {};
+
+          if (!data.username) patch["username"] = piUser.username;
+          if (data.profile?.avatarUrl == null)
+            patch["profile.avatarUrl"] = `https://api.dicebear.com/7.x/identicon/svg?seed=${piUser.username}`;
+          if (data.profile?.rank == null) patch["profile.rank"] = "Rookie";
+          if (data.gameStats == null)
+            patch["gameStats"] = { score: 0, streak: 0, maxStreak: 0, completedQuizzes: 0 };
+          if (data.powerUps == null)
+            patch["powerUps"] = { "Extra Time": 0, "Skip Question": 0, "Second Chance": 0 };
+          if (data.wallet == null)
+            patch["wallet"] = { piBalance: 0, testnetLinked: true };
+          if (data.transactions == null) patch["transactions"] = [];
+          if (data.achievements == null) patch["achievements"] = [];
+          if (data.settings == null)
+            patch["settings"] = { sound: true, notifications: true, theme: "dark" };
+
+          if (Object.keys(patch).length) {
+            await updateDoc(userRef, patch);
+            console.log("🩹 Backfilled missing fields without overwriting.");
+          }
         }
       } catch (err) {
         console.error("Pi auth failed:", err);

@@ -16,7 +16,7 @@ const Home = () => {
       <div className="flex flex-col sm:flex-row justify-center items-center sm:space-x-4 mt-10 space-y-4 sm:space-y-0">
         <Feature icon={<FaFire />} title="Streaks" desc="Come back daily and build your streak." />
         <Feature icon={<FaStar />} title="Leaderboard" desc="Compete with others and earn bragging rights." />
-        <Feature icon={<FaBolt />} title="Power-Ups" desc="Use boosters to stay on top." />
+        <Feature icon={<FaBolt />} title="Power-Ups" desc="Use boosters to stay on top, outsmart your opponents." />
       </div>
 
       {/* CTA Button */}

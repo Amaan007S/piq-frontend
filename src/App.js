@@ -17,15 +17,15 @@ import { PiAuthProvider } from "./contexts/PiAuthContext";
 import { Toaster } from "sonner";
 import React from "react";
 
-import GlobalSyncManager from "./components/GlobalSyncManager"; // ✅ new import
+import GlobalSyncManager from "./components/GlobalSyncManager";
 
 function App() {
   return (
-    <TransactionHistoryProvider>
-      <PiWalletProvider>
-        <StreakProvider>
-          <PowerUpProvider>
-            <PiAuthProvider>
+    <PiAuthProvider>
+      <TransactionHistoryProvider>
+        <PiWalletProvider>
+          <StreakProvider>
+            <PowerUpProvider>
               <Router>
                 {/* ✅ Sync manager is inside all providers */}
                 <GlobalSyncManager />
@@ -64,11 +64,11 @@ function App() {
                   }}
                 />
               </Router>
-            </PiAuthProvider>
-          </PowerUpProvider>
-        </StreakProvider>
-      </PiWalletProvider>
-    </TransactionHistoryProvider>
+            </PowerUpProvider>
+          </StreakProvider>
+        </PiWalletProvider>
+      </TransactionHistoryProvider>
+    </PiAuthProvider>
   );
 }
 

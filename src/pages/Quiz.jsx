@@ -31,7 +31,7 @@ const Quiz = () => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [quizFinished, setQuizFinished] = useState(false);
   const [isSecondChance, setIsSecondChance] = useState(false);
-  const { streak, setStreak, resetStreak, maxStreak, setMaxStreak } = useStreak();
+  const {streak, setStreak, resetStreak, maxStreak, setMaxStreak, addScore} = useStreak();
   const [showFireAnimation, setShowFireAnimation] = useState(false);
   const animationRef = useRef(null);
   const [isTimerActive, setIsTimerActive] = useState(true);
@@ -60,6 +60,12 @@ const Quiz = () => {
       setQuizFinished(true);
     }
   }, [currentQuestion]);
+
+useEffect(() => {
+  if (quizFinished && score > 0) {
+    addScore(score); // ✅ only once at finish
+  }
+}, [quizFinished]);
 
   useEffect(() => {
     if (quizFinished || !quizStarted || !isTimerActive) return;

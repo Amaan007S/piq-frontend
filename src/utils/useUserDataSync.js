@@ -1,3 +1,4 @@
+// src/utils/useUserDataSync.js
 import { useEffect, useRef } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
@@ -8,23 +9,23 @@ import { usePiWallet } from "../contexts/PiWalletContext";
 
 const useUserDataSync = () => {
   const { user, authStatus } = usePiAuth();
-  const { streak, maxStreak, score } = useStreak?.() || {};
-  const { ownedPowerUps } = usePowerUp?.() || {};
-  const { piBalance, testnetLinked } = usePiWallet?.() || {};
+  const { streak, maxStreak, score, loaded } = useStreak(); // ✅ include score here
+  const { ownedPowerUps } = usePowerUp();
+  const { piBalance, testnetLinked } = usePiWallet();
 
-  // prevent redundant writes
   const lastPushedRef = useRef(null);
 
   useEffect(() => {
-    // only after auth
-    if (authStatus !== "success" || !user) return;
+    if (authStatus !== "success" || !user || !loaded) return;
+
+    // If any are still null, don't push yet
+    if (streak === null || maxStreak === null || score === null) return;
 
     const payload = {
       gameStats: {
-        // guard undefined -> keep current numeric shape
-        streak: typeof streak === "number" ? streak : 0,
-        maxStreak: typeof maxStreak === "number" ? maxStreak : 0,
-        score: typeof score === "number" ? score : 0,
+        streak,
+        maxStreak,
+        score, // ✅ handled same as streak
       },
       powerUps: ownedPowerUps || {},
       wallet: {
@@ -34,12 +35,11 @@ const useUserDataSync = () => {
     };
 
     const payloadStr = JSON.stringify(payload);
-    if (payloadStr === lastPushedRef.current) return; // nothing new
+    if (payloadStr === lastPushedRef.current) return;
 
     const push = async () => {
       try {
         const userRef = doc(db, "users", user.username);
-        // debug: see writes in console
         console.log("[useUserDataSync] updateDoc →", payload);
         await updateDoc(userRef, payload);
         lastPushedRef.current = payloadStr;
@@ -52,9 +52,10 @@ const useUserDataSync = () => {
   }, [
     user,
     authStatus,
+    loaded,
     streak,
     maxStreak,
-    score,
+    score, // ✅ included
     ownedPowerUps,
     piBalance,
     testnetLinked,

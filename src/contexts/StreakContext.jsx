@@ -1,19 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { usePiAuth } from "./PiAuthContext";
 
 const StreakContext = createContext();
 
 export const StreakProvider = ({ children }) => {
   const { user, authStatus } = usePiAuth();
-  const [streak, setStreak] = useState(0);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(null);
+  const [maxStreak, setMaxStreak] = useState(null);
+  const [score, setScore] = useState(null); // lifetime score
+  const [loaded, setLoaded] = useState(false);
 
-  // 🔥 Load streaks from Firestore
+  // 🔥 Load stats from Firestore on login
   useEffect(() => {
-    const loadStreaks = async () => {
+    const loadStats = async () => {
       if (authStatus !== "success" || !user) return;
 
       try {
@@ -22,46 +23,35 @@ export const StreakProvider = ({ children }) => {
 
         if (userSnap.exists()) {
           const data = userSnap.data();
-          setStreak(data.gameStats?.streak || 0);
-          setMaxStreak(data.gameStats?.maxStreak || 0);
+          setStreak(data.gameStats?.streak ?? 0);
+          setMaxStreak(data.gameStats?.maxStreak ?? 0);
+          setScore(data.gameStats?.score ?? 0);
         }
       } catch (err) {
-        console.error("Error loading streaks:", err);
+        console.error("Error loading stats:", err);
       } finally {
-        setLoading(false);
+        setLoaded(true);
       }
     };
 
-    loadStreaks();
+    loadStats();
   }, [authStatus, user]);
 
-  // ✅ Update streak in Firestore whenever it changes
-  const updateStreakInDB = async (newStreak, newMaxStreak) => {
-    if (!user) return;
-    try {
-      const userRef = doc(db, "users", user.username);
-      await updateDoc(userRef, {
-        "gameStats.streak": newStreak,
-        "gameStats.maxStreak": newMaxStreak,
-      });
-    } catch (err) {
-      console.error("Error updating streaks:", err);
-    }
-  };
-
+  // ✅ Only update local state; Firestore handled by useUserDataSync
   const incrementStreak = () => {
     setStreak((prev) => {
-      const updated = prev + 1;
-      const newMax = Math.max(updated, maxStreak);
-      setMaxStreak(newMax);
-      updateStreakInDB(updated, newMax);
+      const updated = (prev ?? 0) + 1;
+      setMaxStreak((prevMax) => Math.max(prevMax ?? 0, updated));
       return updated;
     });
   };
 
   const resetStreak = () => {
     setStreak(0);
-    updateStreakInDB(0, maxStreak);
+  };
+
+  const addScore = (points) => {
+    setScore((prev) => (prev ?? 0) + points);
   };
 
   return (
@@ -69,11 +59,14 @@ export const StreakProvider = ({ children }) => {
       value={{
         streak,
         maxStreak,
+        score,
+        addScore,
         incrementStreak,
         resetStreak,
-        loading,
-        setStreak,      // <-- Add this
-        setMaxStreak,   // <-- Add this
+        setStreak,
+        setMaxStreak,
+        setScore,
+        loaded,
       }}
     >
       {children}
@@ -81,7 +74,6 @@ export const StreakProvider = ({ children }) => {
   );
 };
 
-// ✅ Safety return to avoid undefined errors
 export const useStreak = () => {
   const context = useContext(StreakContext);
   if (!context) {

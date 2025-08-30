@@ -54,6 +54,7 @@ export const PiAuthProvider = ({ children }) => {
             streak: 0,
             maxStreak: 0,
             completedQuizzes: 0,
+            weeklyScore: 0,
           },
           powerUps: {
             "Extra Time": 0,

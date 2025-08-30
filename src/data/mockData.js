@@ -4,7 +4,7 @@ const leaderboardData = [
     { name: "CryptoNinja", score: 10, streak: 5 },
     { name: "BlockQueen", score: 9, streak: 4 },
     { name: "PiHunter", score: 9, streak: 3 },
-    { name: "Amaan (You)", score: 8, streak: 3 },
+    { name: "Mike", score: 8, streak: 3 },
     { name: "TokenTiger", score: 7, streak: 2 },
     { name: "SatoshiSeeker", score: 7, streak: 2 },
     { name: "ChainChampion", score: 6, streak: 1 },

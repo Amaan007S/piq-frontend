@@ -1,18 +1,20 @@
+// src/pages/Store.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePowerUp } from "../contexts/PowerUpContext";
-import { usePiWallet } from "../contexts/PiWalletContext"; // ✅ New import
+import { usePiWallet } from "../contexts/PiWalletContext";
+import { usePiAuth } from "../contexts/PiAuthContext"; // ✅ To get logged-in user
 import { toast } from "sonner";
 import { AiOutlineCheckCircle } from "react-icons/ai";
-import { powerUpsConfig } from "../config/powerUpsConfig"; // ✅ Import shared config
-import { useTransactionHistory } from "../contexts/TransactionHistoryContext";
-
+import { powerUpsConfig } from "../config/powerUpsConfig";
+import { db } from "../firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const Store = () => {
   const navigate = useNavigate();
   const { ownedPowerUps, buyPowerUp } = usePowerUp();
-  const { piBalance, deductPi } = usePiWallet(); // ✅ Get wallet actions
-  const { addTransaction } = useTransactionHistory();
+  const { piBalance, deductPi } = usePiWallet();
+  const { user } = usePiAuth();
 
   const [purchaseQuantities, setPurchaseQuantities] = useState(
     powerUpsConfig.reduce((acc, { name }) => {
@@ -35,7 +37,7 @@ const Store = () => {
     }));
   };
 
-  const handleBuyPowerUp = (powerUpName, price) => {
+  const handleBuyPowerUp = async (powerUpName, price) => {
     const quantity = purchaseQuantities[powerUpName];
     const totalCost = price * quantity;
 
@@ -51,11 +53,28 @@ const Store = () => {
       return;
     }
 
+    // ✅ Update local power-ups
     for (let i = 0; i < quantity; i++) {
       buyPowerUp(powerUpName);
     }
-    addTransaction("Purchase", `${powerUpName} ×${quantity}`, -totalCost);
-    
+
+    // ✅ Log Firestore transaction
+    if (user) {
+      try {
+        const txRef = collection(db, "users", user.username, "transactions");
+        await addDoc(txRef, {
+          type: "purchase",
+          detail: `${powerUpName} ×${quantity}`,
+          amount: -totalCost,
+          status: "completed",
+          timestamp: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error("Transaction log error:", err);
+      }
+    }
+
+    // ✅ Success toast
     toast(
       <div className="flex items-center gap-3">
         <AiOutlineCheckCircle className="text-green-400 text-3xl animate-pulse" />
@@ -93,14 +112,14 @@ const Store = () => {
         </button>
       </div>
 
-{/* Wallet Balance Display */}
-<div className="mb-6 w-full max-w-3xl">
-  <h2 className="text-lg font-semibold text-white">
-    💰 Your Pi Balance: <span className="text-yellow-400">{piBalance}π</span>
-  </h2>
-</div>
+      {/* Wallet Balance Display */}
+      <div className="mb-6 w-full max-w-3xl">
+        <h2 className="text-lg font-semibold text-white">
+          💰 Your Pi Balance: <span className="text-yellow-400">{piBalance}π</span>
+        </h2>
+      </div>
 
-
+      {/* PowerUps Grid */}
       <div className="grid gap-6 w-full max-w-3xl">
         {powerUpsConfig.map(({ name, icon, description, price }) => (
           <div

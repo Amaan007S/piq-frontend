@@ -1,9 +1,9 @@
 // src/contexts/PiWalletContext.jsx
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { toast } from "sonner"; 
-import { db } from "../firebase"; // adjust path if needed
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { usePiAuth } from "./PiAuthContext"; // adjust path if needed
+import { db } from "../firebase"; 
+import { doc, onSnapshot, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { usePiAuth } from "./PiAuthContext"; 
 
 const PiWalletContext = createContext();
 
@@ -59,7 +59,7 @@ export const PiWalletProvider = ({ children }) => {
     push();
   }, [piBalance, testnetLinked, authStatus, user]);
 
-  // ---- YOUR EXISTING LOGIC (unchanged) ----
+  // ---- EXISTING LOGIC ----
   const addPi = (amount) => {
     setPiBalance((prev) => prev + amount);
   };
@@ -72,6 +72,7 @@ export const PiWalletProvider = ({ children }) => {
     return false;
   };
 
+  // ✅ UPDATED: Firestore transaction logging for deposits
   const handleTestnetPayment = async ({ amount = 1, memo = "Top-up PiQ Wallet" }) => {
     if (!window?.Pi) {
       console.error("Pi SDK not found.");
@@ -88,6 +89,23 @@ export const PiWalletProvider = ({ children }) => {
       // After success
       if (payment.identifier) {
         addPi(Number(amount));
+
+        // ✅ Add Firestore transaction log
+        if (user) {
+          try {
+            const txRef = collection(db, "users", user.username, "transactions");
+            await addDoc(txRef, {
+              id: payment.identifier,
+              type: "deposit",
+              amount: Number(amount),
+              status: "completed",
+              timestamp: serverTimestamp(),
+            });
+          } catch (err) {
+            console.error("Transaction log error:", err);
+          }
+        }
+
         toast.success(`Received ${amount}π into your PiQ Wallet!`);
       }
     } catch (err) {

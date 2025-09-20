@@ -1,3 +1,4 @@
+// src/pages/MyWallet.jsx
 import React from "react";
 import { usePiWallet } from "../contexts/PiWalletContext";
 import { toast } from "sonner";
@@ -6,21 +7,41 @@ import { FaWallet } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTransactionHistory } from "../contexts/TransactionHistoryContext";
 import { usePiAuth } from "../contexts/PiAuthContext";
+import { db } from "../firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const Wallet = () => {
   const { piBalance, addPi, handleTestnetPayment } = usePiWallet();
-  const { transactions, addTransaction } = useTransactionHistory();
+  const { transactions } = useTransactionHistory();
   const { user, authStatus, error } = usePiAuth();
   const navigate = useNavigate();
 
   const clearDevHistory = () => {
-    localStorage.removeItem("piq_transactions");
-    window.location.reload();
+    // Just for dev — wipes local + requires Firestore reset
+    console.warn("⚠️ In Firestore mode, manual clearing must be done in console.");
+    toast.error("Clear History disabled (Firestore mode).");
   };
 
-  const handleRefill = () => {
-    addPi(5);
-    addTransaction("Refill", "Developer refill", +5);
+  const handleRefill = async () => {
+    const refillAmount = 5;
+    addPi(refillAmount);
+
+    // ✅ Firestore log
+    if (user) {
+      try {
+        const txRef = collection(db, "users", user.username, "transactions");
+        await addDoc(txRef, {
+          type: "refill",
+          detail: "Developer refill",
+          amount: refillAmount,
+          status: "completed",
+          timestamp: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error("Dev refill transaction log error:", err);
+      }
+    }
+
     toast.success("Wallet topped up with 5π Pi!", {
       icon: "⚡",
       style: {
@@ -104,11 +125,33 @@ const Wallet = () => {
               <li key={tx.id} className="flex justify-between items-center">
                 <div>
                   <p className="font-semibold">{tx.type}: {tx.detail}</p>
-                  <p className="text-xs text-gray-400">{tx.time}</p>
+                  <p className="text-xs text-gray-400">
+                    {tx.timestamp?.toDate
+                      ? tx.timestamp.toDate().toLocaleString()
+                      : tx.time || "—"}
+                  </p>
                 </div>
-                <span className={`text-sm font-bold ${tx.amount > 0 ? "text-green-400" : "text-red-400"}`}>
-                  {tx.amount > 0 ? `+${tx.amount}π` : `${tx.amount}π`}
-                </span>
+                <div className="flex flex-col items-end">
+                  <span
+                    className={`text-sm font-bold ${
+                      tx.amount > 0 ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
+                    {tx.amount > 0 ? `+${tx.amount}π` : `${tx.amount}π`}
+                  </span>
+                  {/* ✅ Status Badge */}
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded mt-1 ${
+                      tx.status === "completed"
+                        ? "bg-green-600 text-white"
+                        : tx.status === "pending"
+                        ? "bg-yellow-600 text-white"
+                        : "bg-red-600 text-white"
+                    }`}
+                  >
+                    {tx.status || "unknown"}
+                  </span>
+                </div>
               </li>
             ))
           )}

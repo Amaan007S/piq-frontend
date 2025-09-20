@@ -1,6 +1,7 @@
 // src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAepTxp-PB7zc-NWqxDHH5IAbAwR7TO5Nk",
@@ -15,4 +16,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export { db };
+// export functions (default region). If your functions are deployed to a region like 'us-central1'
+// uncomment the region option: getFunctions(app, "us-central1")
+const functions = getFunctions(app);
+
+export { db, functions };

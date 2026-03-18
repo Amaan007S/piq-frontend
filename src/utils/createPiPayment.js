@@ -38,8 +38,12 @@ async function postJson(url, bodyObj, timeoutMs = 10000) {
   }
 }
 
-async function callApproveHttp(paymentId) {
-  const response = await postJson(APPROVE_HTTP_URL, { paymentId });
+async function callApproveHttp(paymentId, userId, expectedAmount) {
+  const response = await postJson(APPROVE_HTTP_URL, {
+    paymentId,
+    userId,
+    expectedAmount,
+  });
   if (!response.ok) {
     const err = new Error(
       response.body?.error || `approvePayment failed with status ${response.status}`
@@ -80,6 +84,7 @@ const createPiPayment = async (paymentData = {}, callbacks = {}) => {
 
   const approvedPayments = new Set();
   const completedPayments = new Set();
+  const metadata = paymentData.metadata ?? {};
 
   const onReadyForServerApprovalSync = (paymentId) => {
     if (!paymentId || approvedPayments.has(paymentId)) return;
@@ -87,7 +92,11 @@ const createPiPayment = async (paymentData = {}, callbacks = {}) => {
 
     void (async () => {
       try {
-        const response = await callApproveHttp(paymentId);
+        const response = await callApproveHttp(
+          paymentId,
+          metadata.userId || null,
+          Number(paymentData.amount)
+        );
         safeOnReadyForServerApproval(paymentId, response);
       } catch (err) {
         approvedPayments.delete(paymentId);
@@ -116,7 +125,7 @@ const createPiPayment = async (paymentData = {}, callbacks = {}) => {
     amount: String(paymentData.amount),
     memo: paymentData.memo ?? "",
     metadata: {
-      ...(paymentData.metadata ?? {}),
+      ...metadata,
       sandbox: true,
       frontendSandbox: PI_SANDBOX,
     },

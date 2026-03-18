@@ -2,9 +2,40 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { usePiAuth } from "./PiAuthContext";
 import { db } from "../firebase";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 const TransactionHistoryContext = createContext();
+
+function normalizeTransaction(docSnap) {
+  const data = docSnap.data() || {};
+  const rawType = data.type || "credit";
+  const type =
+    rawType === "deposit" ? "credit" : rawType === "purchase" ? "debit" : rawType;
+  const amount = Math.abs(Number(data.amount || 0));
+  const createdAt = data.createdAt || data.timestamp || null;
+  const source =
+    data.source || (rawType === "deposit" ? "pi_payment" : rawType === "purchase" ? "powerup_purchase" : "unknown");
+
+  return {
+    id: docSnap.id,
+    ...data,
+    type,
+    amount: Number.isFinite(amount) ? amount : 0,
+    source,
+    createdAt,
+  };
+}
+
+function getSortValue(transaction) {
+  const candidate = transaction.createdAt;
+  if (candidate?.toMillis) return candidate.toMillis();
+  if (candidate?.seconds) return candidate.seconds * 1000;
+  if (typeof candidate === "string") {
+    const parsed = Date.parse(candidate);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
 
 export const TransactionHistoryProvider = ({ children }) => {
   const { user, authStatus } = usePiAuth();
@@ -13,19 +44,12 @@ export const TransactionHistoryProvider = ({ children }) => {
   useEffect(() => {
     if (authStatus !== "success" || !user) return;
 
-    // ✅ Listen to transactions subcollection in Firestore
-    const q = query(
-      collection(db, "users", user.username, "transactions"),
-      orderBy("timestamp", "desc")
-    );
-
     const unsub = onSnapshot(
-      q,
+      collection(db, "users", user.username, "transactions"),
       (snap) => {
-        const txs = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const txs = snap.docs
+          .map((docSnap) => normalizeTransaction(docSnap))
+          .sort((a, b) => getSortValue(b) - getSortValue(a));
         setTransactions(txs);
       },
       (err) => console.error("Transaction snapshot error:", err)
@@ -34,8 +58,6 @@ export const TransactionHistoryProvider = ({ children }) => {
     return () => unsub();
   }, [user, authStatus]);
 
-  // We no longer need addTransaction here
-  // because purchases & deposits already log directly into Firestore
   return (
     <TransactionHistoryContext.Provider value={{ transactions }}>
       {children}

@@ -3,7 +3,8 @@ const {SecretManagerServiceClient} = require("@google-cloud/secret-manager");
 const smClient = new SecretManagerServiceClient();
 const PROJECT_ID = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT || null;
 const SECRET_NAME = process.env.PI_SECRET_NAME || "PI_API_KEY";
-const PI_API_BASE = (process.env.PI_API_BASE || "https://api.minepi.com/v2").replace(/\/$/, "");
+const PI_API_BASE = (process.env.PI_API_BASE || "https://api.minepi.com/v2")
+  .replace(/\/$/, "");
 
 let cachedApiKey = null;
 
@@ -67,19 +68,23 @@ async function callPiApi(path, {method, body, apiKey, timeoutMs = 10000}) {
       url,
       keyPresent: Boolean(key),
       keyPreview: maskKey(key),
-      body: body || {},
+      body: body === undefined ? null : body,
     });
 
-    const response = await fetch(url, {
+    const requestOptions = {
       method,
       headers: {
         "Authorization": `Key ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body || {}),
       signal: controller.signal,
-    });
+    };
 
+    if (body !== undefined) {
+      requestOptions.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, requestOptions);
     const rawText = await response.text();
     let parsedBody = null;
     try {
@@ -93,7 +98,8 @@ async function callPiApi(path, {method, body, apiKey, timeoutMs = 10000}) {
       url,
       status: response.status,
       ok: response.ok,
-      body: parsedBody !== null ? parsedBody : rawText,
+      rawBody: rawText,
+      body: parsedBody,
     });
 
     if (!response.ok) {
@@ -102,6 +108,7 @@ async function callPiApi(path, {method, body, apiKey, timeoutMs = 10000}) {
       err.debug = {
         url,
         method,
+        rawBody: rawText,
         responseBody: parsedBody !== null ? parsedBody : rawText,
       };
       throw err;
@@ -154,4 +161,3 @@ module.exports = {
   reconcilePayment,
   getPiApiKey,
 };
-

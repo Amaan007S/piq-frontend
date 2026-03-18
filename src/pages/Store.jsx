@@ -1,10 +1,268 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { usePowerUp } from "../contexts/PowerUpContext";
 import { usePiWallet } from "../contexts/PiWalletContext";
 import { toast } from "sonner";
-import { AiOutlineCheckCircle } from "react-icons/ai";
+import {
+  AiOutlineCheckCircle,
+  AiOutlinePlus,
+  AiOutlineMinus,
+} from "react-icons/ai";
 import { powerUpsConfig } from "../config/powerUpsConfig";
+
+const formatPi = (value) => `${Number(value || 0).toFixed(Number.isInteger(Number(value || 0)) ? 0 : 2)} Pi`;
+
+const getBadge = (index) => {
+  if (index === 0) return "Popular";
+  if (index === 1) return "Best value";
+  return null;
+};
+
+const getBenefitLine = (name) => {
+  switch (name) {
+    case "Extra Time":
+      return "+10 seconds to answer";
+    case "Skip Question":
+      return "Skip instantly, keep streak";
+    case "Second Chance":
+      return "Retry after wrong answer";
+    default:
+      return "Boost your next round";
+  }
+};
+
+const getCtaLabel = (name, ownedCount) => {
+  if (ownedCount === 0) return "Get more";
+  switch (name) {
+    case "Extra Time":
+      return "Purchase";
+    case "Skip Question":
+      return "Purchase";
+    case "Second Chance":
+      return "Purchase";
+    default:
+      return "Get Power-Up";
+  }
+};
+
+const QuantitySelector = ({ value, onDecrease, onIncrease, disabled }) => (
+  <div className="inline-flex items-center gap-2 rounded-full bg-black/20 px-2 py-2">
+    <motion.button
+      whileTap={{ scale: disabled ? 1 : 0.97 }}
+      onClick={onDecrease}
+      disabled={disabled}
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+      aria-label="Decrease quantity"
+    >
+      <AiOutlineMinus />
+    </motion.button>
+    <span className="min-w-[2ch] text-center text-base font-semibold text-white">{value}</span>
+    <motion.button
+      whileTap={{ scale: disabled ? 1 : 0.97 }}
+      onClick={onIncrease}
+      disabled={disabled}
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+      aria-label="Increase quantity"
+    >
+      <AiOutlinePlus />
+    </motion.button>
+  </div>
+);
+
+const BalanceCard = ({ balance, onOpenWallet, lowBalanceMessage }) => (
+  <motion.section
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.35 }}
+    className="relative overflow-hidden rounded-[24px] bg-[#1F1F1F] px-5 py-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
+  >
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,184,0,0.12),_transparent_42%)]" />
+    <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-1.5">
+        <p className="text-sm text-zinc-400">Your balance</p>
+        <h2 className="text-3xl font-semibold text-white sm:text-4xl">{formatPi(balance)}</h2>
+        <p className="text-sm text-yellow-300">{lowBalanceMessage || "Not enough Pi for more power-ups -> Add from Wallet"}</p>
+      </div>
+
+      <div className="w-full sm:w-auto lg:min-w-[180px]">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={onOpenWallet}
+          className="w-full rounded-2xl border border-white/12 bg-transparent px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+        >
+          Wallet
+        </motion.button>
+      </div>
+    </div>
+  </motion.section>
+);
+
+const PurchaseModal = ({ isOpen, powerUp, quantity, totalCost, remainingBalance, isProcessing, onCancel, onConfirm }) => (
+  <AnimatePresence>
+    {isOpen && powerUp ? (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+          transition={{ duration: 0.2 }}
+          className="w-full max-w-md rounded-xl bg-[#1F1F1F] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
+        >
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-semibold text-white">Confirm Purchase</h3>
+              <p className="text-sm text-zinc-400">Review your order before using Pi from your wallet.</p>
+            </div>
+
+            <div className="space-y-3 rounded-2xl bg-black/20 p-4 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-zinc-400">Power-up</span>
+                <span className="font-medium text-white">{powerUp.name}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-zinc-400">Quantity</span>
+                <span className="font-medium text-white">{quantity}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-zinc-400">Total cost</span>
+                <span className="font-medium text-white">{totalCost} Pi</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-zinc-400">Remaining balance</span>
+                <span className="font-medium text-white">{remainingBalance} Pi</span>
+              </div>
+              <p className="text-sm text-yellow-300">You'll have {remainingBalance} Pi left</p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={onCancel}
+                disabled={isProcessing}
+                className="w-full rounded-xl border border-white/12 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: isProcessing ? 1 : 0.97 }}
+                onClick={onConfirm}
+                disabled={isProcessing}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FFB800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#ffca3d] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    ) : null}
+  </AnimatePresence>
+);
+
+const PowerUpCard = ({
+  powerUp,
+  quantity,
+  ownedCount,
+  totalCost,
+  disabled,
+  featured,
+  isPending,
+  isAdded,
+  shortage,
+  onIncrease,
+  onDecrease,
+  onBuy,
+  badge,
+}) => {
+  const { name, icon, description, price } = powerUp;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      whileHover={{ y: -3, scale: 1.01 }}
+      className={`h-full rounded-[24px] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition ${
+        featured
+          ? "scale-[1.02] border border-yellow-400/40 bg-[#242424] shadow-[0_12px_30px_rgba(255,184,0,0.08)]"
+          : "bg-[#1F1F1F]"
+      }`}
+    >
+      <div className="flex h-full flex-col justify-between">
+        <div>
+          <div className="flex items-start gap-4">
+            <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl text-[#FFB800]">
+              {icon}
+            </div>
+            <div className="flex-1">
+              <div className="min-h-[110px] space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center">
+                    <h2 className="truncate text-xl font-semibold text-white">{name}</h2>
+                    {badge ? (
+                      <span className="ml-2 rounded-full bg-yellow-400/90 px-2 py-[2px] text-xs font-medium text-black">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="shrink-0 text-base font-semibold text-yellow-400">{price} Pi</span>
+                </div>
+                <p className="line-clamp-1 text-sm font-medium text-gray-300">{getBenefitLine(name)}</p>
+                <p className="line-clamp-2 text-sm text-gray-400">{description}</p>
+                {ownedCount === 0 ? (
+                  <p className="text-sm text-yellow-300">You're out of {name}</p>
+                ) : shortage > 0 ? (
+                  <p className="text-sm text-yellow-300">You're {shortage} Pi away</p>
+                ) : (
+                  <p className="text-sm text-zinc-500">Owned: {ownedCount}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <QuantitySelector
+            value={quantity}
+            onDecrease={onDecrease}
+            onIncrease={onIncrease}
+            disabled={isPending}
+          />
+
+          <div className="flex items-center gap-3">
+            <span className="w-[40px] text-right text-sm text-gray-400">{totalCost} Pi</span>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onBuy}
+              className={`w-[160px] rounded-2xl px-4 py-3 text-center text-sm font-semibold transition ${
+                disabled
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  : isAdded
+                  ? "bg-emerald-500 text-white"
+                  : "bg-[#FFB800] text-black hover:bg-[#ffca3d]"
+              }`}
+            >
+              {isPending ? "Processing..." : disabled ? `Add ${shortage} Pi` : isAdded ? "Added" : getCtaLabel(name, ownedCount)}
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  );
+};
 
 const Store = () => {
   const navigate = useNavigate();
@@ -12,14 +270,64 @@ const Store = () => {
   const { piBalance, purchasePowerUpWithWallet, isStorePurchasePending } = usePiWallet();
 
   const [purchaseQuantities, setPurchaseQuantities] = useState(
-    powerUpsConfig.reduce((acc, { name }) => {
-      acc[name] = 1;
+    powerUpsConfig.reduce((acc, { name, price }) => {
+      acc[name] = piBalance >= price * 2 ? 2 : 1;
       return acc;
     }, {})
   );
+  const [selectedPowerUp, setSelectedPowerUp] = useState(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recentlyAdded, setRecentlyAdded] = useState({});
+
+  const featuredPowerUp = useMemo(() => powerUpsConfig[1]?.name || powerUpsConfig[0]?.name, []);
+  const cheapestPowerUp = useMemo(
+    () => Math.min(...powerUpsConfig.map((powerUp) => Number(powerUp.price || 0))),
+    []
+  );
+  const lowBalanceMessage = piBalance > 0 && piBalance < cheapestPowerUp
+    ? `You're ${Math.max(0, cheapestPowerUp - piBalance)} Pi away from your next power-up`
+    : null;
+
+  useEffect(() => {
+    setPurchaseQuantities((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      powerUpsConfig.forEach(({ name, price }) => {
+        if ((prev[name] == null || prev[name] === 1) && piBalance >= price * 2) {
+          next[name] = 2;
+          changed = true;
+        }
+        if (prev[name] == null) {
+          next[name] = 1;
+          changed = true;
+        }
+      });
+
+      return changed ? next : prev;
+    });
+  }, [piBalance]);
+
+  useEffect(() => {
+    if (!Object.keys(recentlyAdded).length) return undefined;
+
+    const timers = Object.keys(recentlyAdded).map((name) =>
+      setTimeout(() => {
+        setRecentlyAdded((prev) => {
+          const next = { ...prev };
+          delete next[name];
+          return next;
+        });
+      }, 1500)
+    );
+
+    return () => timers.forEach(clearTimeout);
+  }, [recentlyAdded]);
 
   const handleIncreaseQuantity = (powerUpName) => {
-    if (isStorePurchasePending) return;
+    if (isStorePurchasePending || isProcessing) return;
     setPurchaseQuantities((prev) => ({
       ...prev,
       [powerUpName]: prev[powerUpName] + 1,
@@ -27,131 +335,149 @@ const Store = () => {
   };
 
   const handleDecreaseQuantity = (powerUpName) => {
-    if (isStorePurchasePending) return;
+    if (isStorePurchasePending || isProcessing) return;
     setPurchaseQuantities((prev) => ({
       ...prev,
       [powerUpName]: Math.max(1, prev[powerUpName] - 1),
     }));
   };
 
-  const handleBuyPowerUp = async (powerUpName, price) => {
-    if (isStorePurchasePending) return;
-    const quantity = purchaseQuantities[powerUpName];
-    const totalCost = price * quantity;
+  const handleOpenPurchaseModal = (powerUp) => {
+    const quantity = purchaseQuantities[powerUp.name];
+    const totalCost = powerUp.price * quantity;
+    if (isStorePurchasePending || isProcessing) return;
+    if (piBalance < totalCost) {
+      navigate("/wallet");
+      return;
+    }
+    setSelectedPowerUp(powerUp);
+    setSelectedQuantity(quantity);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    if (isProcessing) return;
+    setIsModalOpen(false);
+    setSelectedPowerUp(null);
+    setSelectedQuantity(1);
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedPowerUp || isProcessing || isStorePurchasePending) return;
+
+    setIsProcessing(true);
+    const totalCost = selectedPowerUp.price * selectedQuantity;
 
     const ok = await purchasePowerUpWithWallet({
-      name: powerUpName,
-      price,
-      quantity,
+      name: selectedPowerUp.name,
+      price: selectedPowerUp.price,
+      quantity: selectedQuantity,
     });
-    if (!ok) return;
+
+    if (!ok) {
+      setIsProcessing(false);
+      return;
+    }
+
+    setRecentlyAdded((prev) => ({ ...prev, [selectedPowerUp.name]: true }));
+    setIsProcessing(false);
+    setIsModalOpen(false);
 
     toast(
       <div className="flex items-center gap-3">
-        <AiOutlineCheckCircle className="text-green-400 text-3xl animate-pulse" />
-        <div>
-          <p className="font-semibold text-white">Purchase Successful</p>
-          <p className="text-gray-400 text-sm">
-            Bought {quantity} {powerUpName}(s) for {totalCost} Pi from your wallet.
+        <AiOutlineCheckCircle className="text-3xl text-green-400" />
+        <div className="space-y-1">
+          <p className="font-semibold text-white">Power-up unlocked</p>
+          <p className="text-sm text-zinc-400">
+            Bought {selectedQuantity} {selectedPowerUp.name}(s) for {totalCost} Pi.
           </p>
+          <p className="text-sm text-yellow-300">Use it in your next quiz</p>
         </div>
       </div>,
       {
-        duration: 2500,
+        duration: 2600,
         position: "top-center",
         style: {
           background: "#1F1F1F",
-          border: "1px solid #333",
+          border: "1px solid rgba(255,255,255,0.08)",
           color: "white",
-          padding: "16px",
-          borderRadius: "12px",
+          padding: "14px",
+          borderRadius: "16px",
+          boxShadow: "0 12px 32px rgba(0,0,0,0.22)",
         },
       }
     );
+
+    setSelectedPowerUp(null);
+    setSelectedQuantity(1);
   };
 
+  const modalTotalCost = selectedPowerUp ? selectedPowerUp.price * selectedQuantity : 0;
+  const remainingBalance = Math.max(0, piBalance - modalTotalCost);
+
   return (
-    <div className="flex flex-col items-center p-6 sm:p-8 text-white">
-      <div className="w-full max-w-3xl flex justify-between items-center mb-6">
-        <h1 className="text-3xl sm:text-4xl font-bold text-yellow-400">Store</h1>
-        <button
-          onClick={() => navigate("/wallet")}
-          className="text-sm sm:text-base font-semibold text-yellow-300 bg-[#2A2A2A] px-4 py-2 rounded-xl hover:bg-yellow-400 hover:text-black transition"
-        >
-          My Wallet
-        </button>
+    <>
+      <div className="min-h-screen bg-[#0F0F0F] px-4 py-6 text-white sm:px-6 lg:px-10 lg:py-8">
+        <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 lg:gap-8">
+          <motion.header
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="flex flex-col gap-2"
+          >
+            <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">Store</h1>
+            <p className="max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+              Choose the power-ups that help you stay composed, recover faster, and protect your streak.
+            </p>
+          </motion.header>
+
+          <BalanceCard
+            balance={piBalance}
+            onOpenWallet={() => navigate("/wallet")}
+            lowBalanceMessage={lowBalanceMessage}
+          />
+
+          <section className="grid items-stretch gap-4 lg:grid-cols-3 lg:gap-5">
+            {powerUpsConfig.map((powerUp, index) => {
+              const { name, price } = powerUp;
+              const totalCost = price * purchaseQuantities[name];
+              const shortage = Math.max(0, totalCost - piBalance);
+              const disabled = isStorePurchasePending || isProcessing || piBalance < totalCost;
+
+              return (
+                <PowerUpCard
+                  key={name}
+                  powerUp={powerUp}
+                  quantity={purchaseQuantities[name]}
+                  ownedCount={ownedPowerUps[name] || 0}
+                  totalCost={totalCost}
+                  disabled={disabled}
+                  featured={name === featuredPowerUp}
+                  isPending={isStorePurchasePending || isProcessing}
+                  isAdded={Boolean(recentlyAdded[name])}
+                  shortage={shortage}
+                  onIncrease={() => handleIncreaseQuantity(name)}
+                  onDecrease={() => handleDecreaseQuantity(name)}
+                  onBuy={() => handleOpenPurchaseModal(powerUp)}
+                  badge={getBadge(index)}
+                />
+              );
+            })}
+          </section>
+        </div>
       </div>
 
-      <div className="mb-6 w-full max-w-3xl">
-        <h2 className="text-lg font-semibold text-white">
-          Wallet balance: <span className="text-yellow-400">{piBalance} Pi</span>
-        </h2>
-      </div>
-
-      <div className="grid gap-6 w-full max-w-3xl">
-        {powerUpsConfig.map(({ name, icon, description, price }) => {
-          const totalCost = price * purchaseQuantities[name];
-          const disabled = isStorePurchasePending || piBalance < totalCost;
-
-          return (
-            <div
-              key={name}
-              className="bg-[#1F1F1F] p-6 rounded-2xl shadow-lg hover:shadow-yellow-400/10 transition"
-            >
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="text-yellow-400">{icon}</div>
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-semibold">{name}</h2>
-                    <p className="text-gray-400 text-sm">{description}</p>
-                    <p className="text-sm text-gray-500 mt-1">Owned: {ownedPowerUps[name] || 0}</p>
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-auto flex flex-col sm:flex-row items-end sm:items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <button
-                      onClick={() => handleDecreaseQuantity(name)}
-                      disabled={isStorePurchasePending}
-                      className="bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-white text-xl w-9 h-9 rounded-full flex items-center justify-center"
-                    >
-                      -
-                    </button>
-                    <span className="text-lg font-semibold">{purchaseQuantities[name]}</span>
-                    <button
-                      onClick={() => handleIncreaseQuantity(name)}
-                      disabled={isStorePurchasePending}
-                      className="bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-white text-xl w-9 h-9 rounded-full flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => handleBuyPowerUp(name, price)}
-                    disabled={disabled}
-                    className={`font-bold px-5 py-2 rounded-xl transition w-full sm:w-auto ${
-                      disabled
-                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                        : "bg-yellow-400 hover:bg-yellow-300 text-black"
-                    }`}
-                  >
-                    {isStorePurchasePending ? "Processing..." : `Buy with - ${totalCost} Pi`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <button
-        onClick={() => navigate("/quiz")}
-        className="mt-10 bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-2xl text-lg transition"
-      >
-        Back to Quiz
-      </button>
-    </div>
+      <PurchaseModal
+        isOpen={isModalOpen}
+        powerUp={selectedPowerUp}
+        quantity={selectedQuantity}
+        totalCost={modalTotalCost}
+        remainingBalance={remainingBalance}
+        isProcessing={isProcessing}
+        onCancel={handleCloseModal}
+        onConfirm={handleConfirmPurchase}
+      />
+    </>
   );
 };
 

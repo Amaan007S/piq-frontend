@@ -16,8 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// export functions (default region). If your functions are deployed to a region like 'us-central1'
-// uncomment the region option: getFunctions(app, "us-central1")
-const functions = getFunctions(app);
+// IMPORTANT: ensure this matches your Cloud Functions region
+const functions = getFunctions(app, "us-central1");
 
 export { db, functions };

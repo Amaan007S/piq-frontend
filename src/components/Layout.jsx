@@ -1,10 +1,44 @@
-import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom"; // Import useNavigate
+import React, { useEffect, useRef, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import classNames from "classnames";
+
+const navItems = [
+  { label: "Home", path: "/" },
+  { label: "Quiz", path: "/quiz" },
+  { label: "Leaderboard", path: "/leaderboard" },
+  { label: "Store", path: "/store" },
+  { label: "Wallet", path: "/wallet" },
+];
 
 const Layout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const isFirstLoad = useRef(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname !== "/") {
+      localStorage.setItem("lastRoute", location.pathname);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isFirstLoad.current) return;
+
+    isFirstLoad.current = false;
+
+    const lastRoute = localStorage.getItem("lastRoute");
+    const hasValidHash = window.location.hash && window.location.hash !== "#" && window.location.hash !== "#/";
+
+    if (
+      !hasValidHash &&
+      window.location.pathname === "/" &&
+      lastRoute &&
+      lastRoute !== "/"
+    ) {
+      navigate(lastRoute, { replace: true });
+    }
+  }, [navigate]);
 
   const navLinkClasses = ({ isActive }) =>
     classNames(
@@ -13,36 +47,33 @@ const Layout = ({ children }) => {
     );
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col relative">
-      {/* Navbar */}
-      <nav className="bg-[#111] p-4 flex justify-between items-center z-20">
-        {/* PiQ Name */}
+    <div className="relative flex min-h-screen flex-col bg-black text-white">
+      <nav className="z-20 flex items-center justify-between bg-[#111] p-4">
         <h1
-          className="text-xl font-bold text-yellow-400 cursor-pointer"
-          onClick={() => navigate("/")} // Redirect to Home on click
+          className="cursor-pointer text-xl font-bold text-yellow-400"
+          onClick={() => navigate("/")}
         >
           PiQ
         </h1>
 
-        {/* Desktop Nav */}
-        <div className="hidden sm:flex items-center space-x-4">
-          <NavLink to="/" className={navLinkClasses}>Home</NavLink>
-          <NavLink to="/quiz" className={navLinkClasses}>Quiz</NavLink>
-          <NavLink to="/leaderboard" className={navLinkClasses}>Leaderboard</NavLink>
-          <NavLink to="/store" className={navLinkClasses}>Store</NavLink>
+        <div className="hidden items-center space-x-4 sm:flex">
+          {navItems.map(({ label, path }) => (
+            <NavLink key={path} to={path} className={navLinkClasses} end={path === "/"}>
+              {label}
+            </NavLink>
+          ))}
           <NavLink to="/profile">
             <img
               src="https://api.dicebear.com/7.x/identicon/svg?seed=DrX"
               alt="Profile"
-              className="w-10 h-10 rounded-full border-2 border-yellow-400 hover:scale-105 transition"
+              className="h-10 w-10 rounded-full border-2 border-yellow-400 transition hover:scale-105"
             />
           </NavLink>
         </div>
 
-        {/* Hamburger Icon - Mobile */}
         <div className="sm:hidden">
           <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -53,41 +84,44 @@ const Layout = ({ children }) => {
         </div>
       </nav>
 
-      {/* Overlay Background for Mobile Menu */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10 sm:hidden"
+          className="fixed inset-0 z-10 bg-black/50 backdrop-blur-sm sm:hidden"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
 
-      {/* Slide-in Mobile Menu */}
       <div
-        className={`sm:hidden fixed top-0 right-0 h-full w-64 bg-[#111] border-l border-gray-800 shadow-lg z-10 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 z-10 h-full w-64 transform border-l border-gray-800 bg-[#111] shadow-lg transition-transform duration-300 ease-in-out sm:hidden ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col space-y-2 p-4 pt-20">
-          <NavLink to="/" className={navLinkClasses} onClick={() => setIsMenuOpen(false)}>Home</NavLink>
-          <NavLink to="/quiz" className={navLinkClasses} onClick={() => setIsMenuOpen(false)}>Quiz</NavLink>
-          <NavLink to="/leaderboard" className={navLinkClasses} onClick={() => setIsMenuOpen(false)}>Leaderboard</NavLink>
-          <NavLink to="/store" className={navLinkClasses} onClick={() => setIsMenuOpen(false)}>Store</NavLink>
+          {navItems.map(({ label, path }) => (
+            <NavLink
+              key={path}
+              to={path}
+              className={navLinkClasses}
+              end={path === "/"}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {label}
+            </NavLink>
+          ))}
           <NavLink to="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center space-x-2 px-4 pt-4">
             <img
               src="https://api.dicebear.com/7.x/identicon/svg?seed=DrX"
               alt="Profile"
-              className="w-10 h-10 rounded-full border-2 border-yellow-400"
+              className="h-10 w-10 rounded-full border-2 border-yellow-400"
             />
             <span className="text-white">Your Profile</span>
           </NavLink>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 px-4 py-6 z-0">{children}</main>
+      <main className="z-0 flex-1 px-4 py-6">{children}</main>
 
-      {/* Footer */}
-      <footer className="bg-[#111] text-center p-4 text-sm text-gray-500">
+      <footer className="bg-[#111] p-4 text-center text-sm text-gray-500">
         © 2025 PiQ — Powered by Pi Network
       </footer>
     </div>

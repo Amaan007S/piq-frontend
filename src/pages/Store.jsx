@@ -11,7 +11,8 @@ import {
 } from "react-icons/ai";
 import { powerUpsConfig } from "../config/powerUpsConfig";
 
-const formatPi = (value) => `${Number(value || 0).toFixed(Number.isInteger(Number(value || 0)) ? 0 : 2)} Pi`;
+const formatPi = (value) =>
+  `${Number(value || 0).toFixed(Number.isInteger(Number(value || 0)) ? 0 : 2)} Pi`;
 
 const getBadge = (index) => {
   if (index === 0) return "Popular";
@@ -21,31 +22,19 @@ const getBadge = (index) => {
 
 const getBenefitLine = (name) => {
   switch (name) {
-    case "Extra Time":
-      return "+10 seconds to answer";
-    case "Skip Question":
-      return "Skip instantly, keep streak";
-    case "Second Chance":
-      return "Retry after wrong answer";
-    default:
-      return "Boost your next round";
+    case "Extra Time":      return "+10 seconds to answer";
+    case "Skip Question":   return "Skip instantly, keep streak";
+    case "Second Chance":   return "Retry after wrong answer";
+    default:                return "Boost your next round";
   }
 };
 
 const getCtaLabel = (name, ownedCount) => {
   if (ownedCount === 0) return "Get more";
-  switch (name) {
-    case "Extra Time":
-      return "Purchase";
-    case "Skip Question":
-      return "Purchase";
-    case "Second Chance":
-      return "Purchase";
-    default:
-      return "Get Power-Up";
-  }
+  return "Purchase";
 };
 
+// ─── Quantity Selector ──────────────────────────────────────────────────────
 const QuantitySelector = ({ value, onDecrease, onIncrease, disabled }) => (
   <div className="inline-flex items-center gap-2 rounded-full bg-black/20 px-2 py-2">
     <motion.button
@@ -57,7 +46,9 @@ const QuantitySelector = ({ value, onDecrease, onIncrease, disabled }) => (
     >
       <AiOutlineMinus />
     </motion.button>
-    <span className="min-w-[2ch] text-center text-base font-semibold text-white">{value}</span>
+    <span className="min-w-[2ch] text-center text-base font-semibold text-white">
+      {value}
+    </span>
     <motion.button
       whileTap={{ scale: disabled ? 1 : 0.97 }}
       onClick={onIncrease}
@@ -70,6 +61,7 @@ const QuantitySelector = ({ value, onDecrease, onIncrease, disabled }) => (
   </div>
 );
 
+// ─── Balance Card ────────────────────────────────────────────────────────────
 const BalanceCard = ({ balance, onOpenWallet, lowBalanceMessage }) => (
   <motion.section
     initial={{ opacity: 0, y: 16 }}
@@ -81,11 +73,16 @@ const BalanceCard = ({ balance, onOpenWallet, lowBalanceMessage }) => (
     <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-1.5">
         <p className="text-sm text-zinc-400">Your balance</p>
-        <h2 className="text-3xl font-semibold text-white sm:text-4xl">{formatPi(balance)}</h2>
-        <p className="text-sm text-yellow-300">{lowBalanceMessage || "Not enough Pi for more power-ups -> Add from Wallet"}</p>
+        <h2 className="text-3xl font-semibold text-white sm:text-4xl">
+          {formatPi(balance)}
+        </h2>
+        <p className="text-sm text-yellow-300">
+          {lowBalanceMessage ||
+            "Not enough Pi for more power-ups → Add from Wallet"}
+        </p>
       </div>
 
-      <div className="w-full sm:w-auto lg:min-w-[180px]">
+      <div className="w-full sm:w-auto sm:min-w-[180px]">
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={onOpenWallet}
@@ -98,7 +95,11 @@ const BalanceCard = ({ balance, onOpenWallet, lowBalanceMessage }) => (
   </motion.section>
 );
 
-const PurchaseModal = ({ isOpen, powerUp, quantity, totalCost, remainingBalance, isProcessing, onCancel, onConfirm }) => (
+// ─── Purchase Modal ──────────────────────────────────────────────────────────
+const PurchaseModal = ({
+  isOpen, powerUp, quantity, totalCost,
+  remainingBalance, isProcessing, onCancel, onConfirm,
+}) => (
   <AnimatePresence>
     {isOpen && powerUp ? (
       <motion.div
@@ -117,7 +118,9 @@ const PurchaseModal = ({ isOpen, powerUp, quantity, totalCost, remainingBalance,
           <div className="space-y-5">
             <div className="space-y-2">
               <h3 className="text-2xl font-semibold text-white">Confirm Purchase</h3>
-              <p className="text-sm text-zinc-400">Review your order before using Pi from your wallet.</p>
+              <p className="text-sm text-zinc-400">
+                Review your order before using Pi from your wallet.
+              </p>
             </div>
 
             <div className="space-y-3 rounded-2xl bg-black/20 p-4 text-sm">
@@ -137,7 +140,9 @@ const PurchaseModal = ({ isOpen, powerUp, quantity, totalCost, remainingBalance,
                 <span className="text-zinc-400">Remaining balance</span>
                 <span className="font-medium text-white">{remainingBalance} Pi</span>
               </div>
-              <p className="text-sm text-yellow-300">You'll have {remainingBalance} Pi left</p>
+              <p className="text-sm text-yellow-300">
+                You'll have {remainingBalance} Pi left
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -172,20 +177,11 @@ const PurchaseModal = ({ isOpen, powerUp, quantity, totalCost, remainingBalance,
   </AnimatePresence>
 );
 
+// ─── Power-Up Card ───────────────────────────────────────────────────────────
 const PowerUpCard = ({
-  powerUp,
-  quantity,
-  ownedCount,
-  totalCost,
-  disabled,
-  featured,
-  isPending,
-  isAdded,
-  shortage,
-  onIncrease,
-  onDecrease,
-  onBuy,
-  badge,
+  powerUp, quantity, ownedCount, totalCost,
+  disabled, featured, isPending, isAdded,
+  shortage, onIncrease, onDecrease, onBuy, badge,
 }) => {
   const { name, icon, description, price } = powerUp;
 
@@ -197,31 +193,41 @@ const PowerUpCard = ({
       whileHover={{ y: -3, scale: 1.01 }}
       className={`h-full rounded-[24px] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.14)] transition ${
         featured
-          ? "scale-[1.02] border border-yellow-400/40 bg-[#242424] shadow-[0_12px_30px_rgba(255,184,0,0.08)]"
+          // FIX: removed scale-[1.02] — causes horizontal overflow on mobile.
+          // Desktop gets the subtle lift via sm:scale-[1.02] only.
+          ? "border border-yellow-400/40 bg-[#242424] shadow-[0_12px_30px_rgba(255,184,0,0.08)] sm:scale-[1.02]"
           : "bg-[#1F1F1F]"
       }`}
     >
       <div className="flex h-full flex-col justify-between">
+        {/* ── Card Header ── */}
         <div>
           <div className="flex items-start gap-4">
-            <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl text-[#FFB800]">
+            <div className="mt-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-[#FFB800]">
               {icon}
             </div>
-            <div className="flex-1">
-              <div className="min-h-[110px] space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center">
+            <div className="min-w-0 flex-1">
+              <div className="space-y-2">
+                {/* Name + badge + price row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                     <h2 className="truncate text-xl font-semibold text-white">{name}</h2>
                     {badge ? (
-                      <span className="ml-2 rounded-full bg-yellow-400/90 px-2 py-[2px] text-xs font-medium text-black">
+                      <span className="rounded-full bg-yellow-400/90 px-2 py-[2px] text-xs font-medium text-black">
                         {badge}
                       </span>
                     ) : null}
                   </div>
-                  <span className="shrink-0 text-base font-semibold text-yellow-400">{price} Pi</span>
+                  <span className="shrink-0 text-base font-semibold text-yellow-400">
+                    {price} Pi
+                  </span>
                 </div>
-                <p className="line-clamp-1 text-sm font-medium text-gray-300">{getBenefitLine(name)}</p>
+
+                <p className="line-clamp-1 text-sm font-medium text-gray-300">
+                  {getBenefitLine(name)}
+                </p>
                 <p className="line-clamp-2 text-sm text-gray-400">{description}</p>
+
                 {ownedCount === 0 ? (
                   <p className="text-sm text-yellow-300">You're out of {name}</p>
                 ) : shortage > 0 ? (
@@ -234,36 +240,48 @@ const PowerUpCard = ({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        {/*
+          ── Bottom Action Row ──────────────────────────────────────────────
+          FIX: On mobile, stack into two rows so nothing overflows.
+            Row 1: QuantitySelector  (left-aligned)
+            Row 2: "X Pi" label + Buy button  (full width button)
+          On sm+ screens, restore the original single-row layout.
+        */}
+        {/* Single row always — button flex-1 fills remaining space naturally */}
+        <div className="mt-4 flex items-center gap-3">
           <QuantitySelector
             value={quantity}
             onDecrease={onDecrease}
             onIncrease={onIncrease}
             disabled={isPending}
           />
-
-          <div className="flex items-center gap-3">
-            <span className="w-[40px] text-right text-sm text-gray-400">{totalCost} Pi</span>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={onBuy}
-              className={`w-[160px] rounded-2xl px-4 py-3 text-center text-sm font-semibold transition ${
-                disabled
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  : isAdded
-                  ? "bg-emerald-500 text-white"
-                  : "bg-[#FFB800] text-black hover:bg-[#ffca3d]"
-              }`}
-            >
-              {isPending ? "Processing..." : disabled ? `Add ${shortage} Pi` : isAdded ? "Added" : getCtaLabel(name, ownedCount)}
-            </motion.button>
-          </div>
+          <span className="shrink-0 text-sm text-gray-400">{totalCost} Pi</span>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onBuy}
+            className={`flex-1 rounded-2xl px-3 py-3 text-center text-sm font-semibold transition ${
+              disabled
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : isAdded
+                ? "bg-emerald-500 text-white"
+                : "bg-[#FFB800] text-black hover:bg-[#ffca3d]"
+            }`}
+          >
+            {isPending
+              ? "Processing..."
+              : disabled
+              ? `Add ${shortage} Pi`
+              : isAdded
+              ? "Added"
+              : getCtaLabel(name, ownedCount)}
+          </motion.button>
         </div>
       </div>
     </motion.article>
   );
 };
 
+// ─── Store Page ──────────────────────────────────────────────────────────────
 const Store = () => {
   const navigate = useNavigate();
   const { ownedPowerUps } = usePowerUp();
@@ -281,20 +299,23 @@ const Store = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [recentlyAdded, setRecentlyAdded] = useState({});
 
-  const featuredPowerUp = useMemo(() => powerUpsConfig[1]?.name || powerUpsConfig[0]?.name, []);
-  const cheapestPowerUp = useMemo(
-    () => Math.min(...powerUpsConfig.map((powerUp) => Number(powerUp.price || 0))),
+  const featuredPowerUp = useMemo(
+    () => powerUpsConfig[1]?.name || powerUpsConfig[0]?.name,
     []
   );
-  const lowBalanceMessage = piBalance > 0 && piBalance < cheapestPowerUp
-    ? `You're ${Math.max(0, cheapestPowerUp - piBalance)} Pi away from your next power-up`
-    : null;
+  const cheapestPowerUp = useMemo(
+    () => Math.min(...powerUpsConfig.map((p) => Number(p.price || 0))),
+    []
+  );
+  const lowBalanceMessage =
+    piBalance > 0 && piBalance < cheapestPowerUp
+      ? `You're ${Math.max(0, cheapestPowerUp - piBalance)} Pi away from your next power-up`
+      : null;
 
   useEffect(() => {
     setPurchaseQuantities((prev) => {
       const next = { ...prev };
       let changed = false;
-
       powerUpsConfig.forEach(({ name, price }) => {
         if ((prev[name] == null || prev[name] === 1) && piBalance >= price * 2) {
           next[name] = 2;
@@ -305,14 +326,12 @@ const Store = () => {
           changed = true;
         }
       });
-
       return changed ? next : prev;
     });
   }, [piBalance]);
 
   useEffect(() => {
     if (!Object.keys(recentlyAdded).length) return undefined;
-
     const timers = Object.keys(recentlyAdded).map((name) =>
       setTimeout(() => {
         setRecentlyAdded((prev) => {
@@ -322,16 +341,12 @@ const Store = () => {
         });
       }, 1500)
     );
-
     return () => timers.forEach(clearTimeout);
   }, [recentlyAdded]);
 
   const handleIncreaseQuantity = (powerUpName) => {
     if (isStorePurchasePending || isProcessing) return;
-    setPurchaseQuantities((prev) => ({
-      ...prev,
-      [powerUpName]: prev[powerUpName] + 1,
-    }));
+    setPurchaseQuantities((prev) => ({ ...prev, [powerUpName]: prev[powerUpName] + 1 }));
   };
 
   const handleDecreaseQuantity = (powerUpName) => {
@@ -364,7 +379,6 @@ const Store = () => {
 
   const handleConfirmPurchase = async () => {
     if (!selectedPowerUp || isProcessing || isStorePurchasePending) return;
-
     setIsProcessing(true);
     const totalCost = selectedPowerUp.price * selectedQuantity;
 
@@ -425,9 +439,12 @@ const Store = () => {
             transition={{ duration: 0.35 }}
             className="flex flex-col gap-2"
           >
-            <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">Store</h1>
+            <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Store
+            </h1>
             <p className="max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Choose the power-ups that help you stay composed, recover faster, and protect your streak.
+              Choose the power-ups that help you stay composed, recover faster,
+              and protect your streak.
             </p>
           </motion.header>
 
@@ -442,7 +459,8 @@ const Store = () => {
               const { name, price } = powerUp;
               const totalCost = price * purchaseQuantities[name];
               const shortage = Math.max(0, totalCost - piBalance);
-              const disabled = isStorePurchasePending || isProcessing || piBalance < totalCost;
+              const disabled =
+                isStorePurchasePending || isProcessing || piBalance < totalCost;
 
               return (
                 <PowerUpCard

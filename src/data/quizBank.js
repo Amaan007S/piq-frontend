@@ -30,15 +30,6 @@ const toConceptId = (value) =>
 
 const uniqueValues = (values) => Array.from(new Set(values));
 
-const buildOptionsFromPool = (answer, pool, seed) => {
-  const distractors = sortDeterministically(
-    uniqueValues(pool).filter((item) => item !== answer),
-    `${seed}:pool`
-  ).slice(0, 3);
-
-  return buildOptionsFromDistractors(answer, distractors, seed);
-};
-
 const buildOptionsFromDistractors = (answer, distractors, seed) => {
   const options = sortDeterministically(uniqueValues([answer, ...distractors]), `${seed}:options`);
 
@@ -62,77 +53,77 @@ const buildQuestion = ({ conceptId, question, options, answer, difficulty, topic
 });
 
 const easyDefinitionFacts = [
-  { term: "a blockchain", answer: "A shared digital ledger", topic: "crypto" },
-  { term: "a wallet", answer: "A tool that manages crypto keys", topic: "crypto" },
-  { term: "a private key", answer: "A secret used to sign transactions", topic: "crypto" },
-  { term: "a public key", answer: "A shareable key used to receive funds", topic: "crypto" },
-  { term: "a seed phrase", answer: "Backup words used to recover a wallet", topic: "crypto" },
-  { term: "a node", answer: "A computer that relays blockchain data", topic: "crypto" },
-  { term: "a validator", answer: "A participant that confirms blocks", topic: "crypto" },
-  { term: "consensus", answer: "A method for ledger agreement", topic: "crypto" },
-  { term: "a smart contract", answer: "Code that runs automatically on-chain", topic: "crypto" },
-  { term: "a gas fee", answer: "A fee paid to process a transaction", topic: "crypto" },
-  { term: "mining", answer: "Using computing power to secure a chain", topic: "crypto" },
-  { term: "staking", answer: "Locking coins to support a network", topic: "crypto" },
-  { term: "a stablecoin", answer: "A token designed for price stability", topic: "crypto" },
-  { term: "an NFT", answer: "A unique token for digital ownership", topic: "crypto" },
-  { term: "an altcoin", answer: "Any cryptocurrency other than bitcoin", topic: "crypto" },
-  { term: "a cold wallet", answer: "A wallet kept offline", topic: "crypto" },
-  { term: "a hot wallet", answer: "A wallet connected to the internet", topic: "crypto" },
-  { term: "a hash", answer: "A fixed-length output from data", topic: "crypto" },
-  { term: "a block explorer", answer: "A tool for viewing on-chain activity", topic: "crypto" },
-  { term: "market cap", answer: "Price multiplied by circulating supply", topic: "general" },
-  { term: "fiat money", answer: "Government-issued money", topic: "general" },
-  { term: "a testnet", answer: "A blockchain environment for testing", topic: "crypto" },
-  { term: "a mainnet", answer: "A live blockchain with real value", topic: "crypto" },
-  { term: "a dApp", answer: "An app built on blockchain rails", topic: "crypto" },
-  { term: "DeFi", answer: "Finance without traditional middlemen", topic: "crypto" },
-  { term: "a liquidity pool", answer: "Tokens locked to enable trades", topic: "crypto" },
-  { term: "slippage", answer: "The gap between expected and final trade price", topic: "crypto" },
-  { term: "a bridge", answer: "A tool for moving assets between chains", topic: "crypto" },
-  { term: "an oracle", answer: "A service that brings outside data on-chain", topic: "crypto" },
-  { term: "an airdrop", answer: "Tokens distributed to users by criteria", topic: "crypto" },
-  { term: "a token burn", answer: "Permanent removal of tokens from supply", topic: "crypto" },
-  { term: "circulating supply", answer: "Tokens currently available in the market", topic: "general" },
-  { term: "phishing", answer: "A scam that tries to steal sensitive data", topic: "general" },
-  { term: "two-factor authentication", answer: "An extra security step during login", topic: "general" },
-  { term: "peer-to-peer transfer", answer: "A direct transfer between users", topic: "general" },
+  { term: "a blockchain", answer: "A shared digital ledger", distractors: ["A wallet backup phrase", "A private chat app", "A token price chart"], topic: "crypto", conceptId: "blockchain" },
+  { term: "a wallet", answer: "A tool that manages crypto keys", distractors: ["A blockchain explorer", "A mining reward", "A validator set"], topic: "crypto", conceptId: "wallet" },
+  { term: "a private key", answer: "A secret used to sign transactions", distractors: ["A public receiving address", "A market price alert", "A validator reward"], topic: "crypto", conceptId: "private-key" },
+  { term: "a public key", answer: "A shareable key used to receive funds", distractors: ["A secret recovery code", "A gas rebate", "A token burn record"], topic: "crypto", conceptId: "public-key" },
+  { term: "a seed phrase", answer: "Backup words used to recover a wallet", distractors: ["A trading password", "A wallet nickname", "A network fee"], topic: "crypto", conceptId: "seed-phrase" },
+  { term: "a node", answer: "A computer that relays blockchain data", distractors: ["A token bridge fee", "A hardware wallet PIN", "A stablecoin issuer"], topic: "crypto", conceptId: "node" },
+  { term: "a validator", answer: "A participant that confirms blocks", distractors: ["A block explorer page", "A wallet contact list", "A swap interface"], topic: "crypto", conceptId: "validator" },
+  { term: "consensus", answer: "A method for ledger agreement", distractors: ["A token logo update", "A wallet color theme", "A price notification"], topic: "crypto", conceptId: "consensus" },
+  { term: "a smart contract", answer: "Code that runs automatically on-chain", distractors: ["A hardware wallet cable", "A seed phrase backup", "A fiat bank transfer"], topic: "crypto", conceptId: "smart-contract" },
+  { term: "a gas fee", answer: "A fee paid to process a transaction", distractors: ["A wallet recovery tool", "A token ticker symbol", "A staking lock period"], topic: "crypto", conceptId: "gas-fee" },
+  { term: "mining", answer: "Using computing power to secure a chain", distractors: ["Recovering a seed phrase", "Reviewing a block explorer", "Changing token names"], topic: "crypto", conceptId: "mining" },
+  { term: "staking", answer: "Locking coins to support a network", distractors: ["Posting wallet addresses", "Printing QR codes", "Rotating private keys"], topic: "crypto", conceptId: "staking" },
+  { term: "a stablecoin", answer: "A token designed for price stability", distractors: ["A token with random supply", "A wallet-only password", "A mining difficulty rule"], topic: "crypto", conceptId: "stablecoin" },
+  { term: "an NFT", answer: "A unique token for digital ownership", distractors: ["A recurring gas fee", "A blockchain node log", "A wallet recovery phrase"], topic: "crypto", conceptId: "nft" },
+  { term: "an altcoin", answer: "Any cryptocurrency other than bitcoin", distractors: ["A type of seed phrase", "A validator dashboard", "A stable exchange rate"], topic: "crypto", conceptId: "altcoin" },
+  { term: "a cold wallet", answer: "A wallet kept offline", distractors: ["A wallet used only for swaps", "A wallet shown on public screens", "A wallet that mines coins"], topic: "crypto", conceptId: "cold-wallet" },
+  { term: "a hot wallet", answer: "A wallet connected to the internet", distractors: ["A wallet stored offline only", "A paper backup card", "A block confirmation count"], topic: "crypto", conceptId: "hot-wallet" },
+  { term: "a hash", answer: "A fixed-length output from data", distractors: ["A wallet contact book", "A list of token holders", "A staking payout date"], topic: "crypto", conceptId: "hash" },
+  { term: "a block explorer", answer: "A tool for viewing on-chain activity", distractors: ["A wallet recovery wizard", "A validator voting rule", "A token launchpad"], topic: "crypto", conceptId: "block-explorer" },
+  { term: "market cap", answer: "Price multiplied by circulating supply", distractors: ["The number of wallet users", "A fixed transaction fee", "A network block time"], topic: "general", conceptId: "market-cap" },
+  { term: "fiat money", answer: "Government-issued money", distractors: ["A wallet seed phrase", "A token bridge route", "A staking reward type"], topic: "general", conceptId: "fiat-money" },
+  { term: "a testnet", answer: "A blockchain environment for testing", distractors: ["A live payment network", "A cold-storage device", "A private trading group"], topic: "crypto", conceptId: "testnet" },
+  { term: "a mainnet", answer: "A live blockchain with real value", distractors: ["A practice-only blockchain", "A wallet support ticket", "A test faucet page"], topic: "crypto", conceptId: "mainnet" },
+  { term: "a dApp", answer: "An app built on blockchain rails", distractors: ["A printed seed backup", "A validator penalty rule", "A gas refund form"], topic: "crypto", conceptId: "dapp" },
+  { term: "DeFi", answer: "Finance without traditional middlemen", distractors: ["A wallet backup standard", "A mining hardware brand", "A token ticker list"], topic: "crypto", conceptId: "defi" },
+  { term: "a liquidity pool", answer: "Tokens locked to enable trades", distractors: ["A wallet backup folder", "A block reward schedule", "A hardware wallet screen"], topic: "crypto", conceptId: "liquidity-pool" },
+  { term: "slippage", answer: "The gap between expected and final trade price", distractors: ["A fixed wallet password", "A staking reward timer", "A validator signup"], topic: "crypto", conceptId: "slippage" },
+  { term: "a bridge", answer: "A tool for moving assets between chains", distractors: ["A seed phrase scanner", "A token burn chart", "A cold storage room"], topic: "crypto", conceptId: "bridge" },
+  { term: "an oracle", answer: "A service that brings outside data on-chain", distractors: ["A wallet import tool", "A mining fan controller", "A token logo file"], topic: "crypto", conceptId: "oracle" },
+  { term: "an airdrop", answer: "Tokens distributed to users by criteria", distractors: ["A validator slash event", "A wallet recovery failure", "A permanent gas discount"], topic: "crypto", conceptId: "airdrop" },
+  { term: "a token burn", answer: "Permanent removal of tokens from supply", distractors: ["A wallet sign-in prompt", "A new chain launchpad", "A validator hardware check"], topic: "crypto", conceptId: "token-burn" },
+  { term: "circulating supply", answer: "Tokens currently available in the market", distractors: ["Future token ideas", "Only burned coins", "A wallet password count"], topic: "general", conceptId: "circulating-supply" },
+  { term: "phishing", answer: "A scam that tries to steal sensitive data", distractors: ["A validator upgrade", "A gas estimator", "A token listing page"], topic: "general", conceptId: "phishing" },
+  { term: "two-factor authentication", answer: "An extra security step during login", distractors: ["A second wallet address", "A mining reward system", "A block explorer filter"], topic: "general", conceptId: "two-factor-authentication" },
+  { term: "peer-to-peer transfer", answer: "A direct transfer between users", distractors: ["A validator committee vote", "A bank-owned chain explorer", "A token burn event"], topic: "general", conceptId: "peer-to-peer-transfer" },
 ];
 
 const easyNamedFacts = [
-  { stem: "What is the native currency of Pi Network?", answer: "Pi", distractors: ["Bitcoin", "Ether", "USDT"], topic: "pi", conceptId: "pi" },
-  { stem: "Which consensus protocol does Pi Network use?", answer: "Stellar Consensus Protocol", distractors: ["Proof of Work", "Proof of Stake", "Delegated Proof of Stake"], topic: "pi", conceptId: "pi-consensus" },
-  { stem: "Who is the pseudonymous creator of Bitcoin?", answer: "Satoshi Nakamoto", distractors: ["Vitalik Buterin", "Nicolas Kokkalis", "Charles Hoskinson"], topic: "crypto", conceptId: "satoshi-nakamoto" },
-  { stem: "What is the native asset of Ethereum?", answer: "Ether", distractors: ["Bitcoin", "Solana", "XRP"], topic: "crypto", conceptId: "ether" },
-  { stem: "What is Bitcoin's ticker symbol?", answer: "BTC", distractors: ["ETH", "LTC", "XRP"], topic: "crypto", conceptId: "bitcoin" },
-  { stem: "What is Ethereum's ticker symbol?", answer: "ETH", distractors: ["ETC", "BTC", "SOL"], topic: "crypto", conceptId: "ether" },
-  { stem: "What does NFT stand for?", answer: "Non-Fungible Token", distractors: ["New Fungible Token", "Network Fee Ticket", "Non-Finalized Trade"], topic: "crypto", conceptId: "nft" },
-  { stem: "What kind of asset aims to track one dollar?", answer: "Stablecoin", distractors: ["Meme coin", "Governance token", "Utility token"], topic: "crypto", conceptId: "stablecoin" },
-  { stem: "Which network uses Pi as its native currency?", answer: "Pi Network", distractors: ["Bitcoin", "Ethereum", "Solana"], topic: "pi", conceptId: "pi-network" },
-  { stem: "Which asset is native to Bitcoin?", answer: "Bitcoin", distractors: ["Ether", "USDC", "Solana"], topic: "crypto", conceptId: "bitcoin" },
-  { stem: "Which asset is native to Ethereum?", answer: "Ether", distractors: ["Bitcoin", "Polygon", "Tether"], topic: "crypto", conceptId: "ether" },
-  { stem: "Which phrase protects wallet recovery?", answer: "Seed phrase", distractors: ["Public key", "Gas fee", "Block explorer"], topic: "crypto", conceptId: "seed-phrase" },
+  { stem: "What is the native currency of Pi Network?", answer: "Pi", distractors: ["Bitcoin", "Ether", "USDT"], topic: "pi", conceptId: "pi", editorialVariants: ["Pi Network pays in what?", "Which coin belongs to Pi Network?", "Pi Network's native coin is?", "What do Pi users earn in-network?"] },
+  { stem: "Which consensus protocol does Pi Network use?", answer: "Stellar Consensus Protocol", distractors: ["Proof of Work", "Proof of Stake", "Delegated Proof of Stake"], topic: "pi", conceptId: "pi-consensus", editorialVariants: ["What consensus model powers Pi Network?", "Pi Network is based on which protocol?", "Which protocol does Pi rely on?", "Pi Network runs on what consensus approach?"] },
+  { stem: "Who is the pseudonymous creator of Bitcoin?", answer: "Satoshi Nakamoto", distractors: ["Vitalik Buterin", "Nicolas Kokkalis", "Charles Hoskinson"], topic: "crypto", conceptId: "satoshi-nakamoto", editorialVariants: ["Who created Bitcoin under a pseudonym?", "Bitcoin was introduced by whom?", "Who is tied to Bitcoin's original launch?", "Which name is linked to Bitcoin's creation?"] },
+  { stem: "What is the native asset of Ethereum?", answer: "Ether", distractors: ["Bitcoin", "Solana", "XRP"], topic: "crypto", conceptId: "ether", editorialVariants: ["Ethereum's native asset is what?", "What coin belongs to Ethereum itself?", "Which asset powers Ethereum?", "What is Ethereum's built-in asset called?"] },
+  { stem: "What is Bitcoin's ticker symbol?", answer: "BTC", distractors: ["ETH", "LTC", "XRP"], topic: "crypto", conceptId: "bitcoin", editorialVariants: ["Bitcoin trades under which ticker?", "What's the market symbol for Bitcoin?", "Which ticker stands for Bitcoin?", "On exchanges, Bitcoin is shown as?"] },
+  { stem: "What is Ethereum's ticker symbol?", answer: "ETH", distractors: ["ETC", "BTC", "SOL"], topic: "crypto", conceptId: "ether", editorialVariants: ["Ethereum trades under which ticker?", "What's the market symbol for Ethereum?", "Which ticker stands for Ethereum?", "On exchanges, Ethereum appears as?"] },
+  { stem: "What does NFT stand for?", answer: "Non-Fungible Token", distractors: ["New Fungible Token", "Network Fee Ticket", "Non-Finalized Trade"], topic: "crypto", conceptId: "nft", editorialVariants: ["NFT is short for what?", "What does NFT actually mean?", "Expand the term NFT.", "What do the letters NFT stand for?"] },
+  { stem: "What kind of asset aims to track one dollar?", answer: "Stablecoin", distractors: ["Meme coin", "Governance token", "Utility token"], topic: "crypto", conceptId: "stablecoin", editorialVariants: ["Which asset type tries to stay near $1?", "What kind of crypto targets price stability?", "Which token type aims to track a dollar?", "What do you call a dollar-pegged token?"] },
+  { stem: "Which network uses Pi as its native currency?", answer: "Pi Network", distractors: ["Bitcoin", "Ethereum", "Solana"], topic: "pi", conceptId: "pi-network", editorialVariants: ["Pi belongs to which network?", "Which network's native coin is Pi?", "Pi is used on what network?", "What network is built around Pi?"] },
+  { stem: "Which asset is native to Bitcoin?", answer: "Bitcoin", distractors: ["Ether", "USDC", "Solana"], topic: "crypto", conceptId: "bitcoin", editorialVariants: ["Bitcoin's native asset is what?", "Which coin belongs to the Bitcoin network?", "What asset is built into Bitcoin?", "The Bitcoin network uses which native asset?"] },
+  { stem: "Which asset is native to Ethereum?", answer: "Ether", distractors: ["Bitcoin", "Polygon", "Tether"], topic: "crypto", conceptId: "ether", editorialVariants: ["Ethereum's native asset is which one?", "Which coin belongs to Ethereum?", "What asset is built into Ethereum?", "The Ethereum network uses which native asset?"] },
+  { stem: "Which phrase protects wallet recovery?", answer: "Seed phrase", distractors: ["Public key", "Gas fee", "Block explorer"], topic: "crypto", conceptId: "seed-phrase", editorialVariants: ["What helps you recover a wallet?", "Which phrase restores wallet access?", "What do you need to recover a wallet?", "Which phrase matters most for wallet recovery?"] },
 ];
 
 const easyPurposeFacts = [
-  { stem: "What is a wallet address mainly used for?", answer: "Receiving funds", distractors: ["Signing transactions", "Mining blocks", "Resetting passwords"], topic: "crypto", conceptId: "wallet-address" },
-  { stem: "Where should a seed phrase be stored?", answer: "Privately offline", distractors: ["In public chat", "On a random website", "Inside a token name"], topic: "general", conceptId: "seed-phrase" },
-  { stem: "What does a block explorer help you check?", answer: "Transaction status", distractors: ["Phone battery", "Wallet theme", "Avatar rank"], topic: "crypto", conceptId: "block-explorer" },
-  { stem: "What do testnet coins usually have?", answer: "No real market value", distractors: ["A one-dollar peg", "Guaranteed rewards", "Mainnet voting rights"], topic: "crypto", conceptId: "testnet" },
-  { stem: "What do mainnet assets usually represent?", answer: "Real value on a live network", distractors: ["Practice-only balances", "Local demo points", "Offline backups"], topic: "crypto", conceptId: "mainnet" },
-  { stem: "What does 2FA add to login?", answer: "An extra verification step", distractors: ["A second private key", "A lower gas fee", "A new wallet address"], topic: "general", conceptId: "two-factor-authentication" },
-  { stem: "What does a phishing message often ask for?", answer: "Your seed phrase or passwords", distractors: ["Your app theme", "Your gas tracker", "Your favorite token"], topic: "general", conceptId: "phishing" },
-  { stem: "Should a private key stay secret?", answer: "Yes, always", distractors: ["No, share it online", "Only after a trade", "Only on testnet"], topic: "general", conceptId: "private-key" },
-  { stem: "Can a public key be shared?", answer: "Yes, it is meant to be shared", distractors: ["No, never", "Only after staking", "Only through email"], topic: "crypto", conceptId: "public-key" },
-  { stem: "Which wallet type is best for long-term storage?", answer: "Cold wallet", distractors: ["Hot wallet", "Exchange banner", "Gas tracker"], topic: "crypto", conceptId: "cold-wallet" },
-  { stem: "Which wallet type is best for quick access?", answer: "Hot wallet", distractors: ["Cold wallet", "Paper receipt", "Block explorer"], topic: "crypto", conceptId: "hot-wallet" },
-  { stem: "What can staking sometimes earn?", answer: "Rewards", distractors: ["Seed phrases", "Password resets", "Token burns"], topic: "crypto", conceptId: "staking" },
-  { stem: "What does DeFi often try to remove?", answer: "Traditional intermediaries", distractors: ["Wallet addresses", "Block confirmations", "Token symbols"], topic: "crypto", conceptId: "defi" },
-  { stem: "Blockchain records are grouped into what?", answer: "Blocks", distractors: ["Folders", "Profile cards", "Widgets"], topic: "crypto", conceptId: "blockchain" },
-  { stem: "What does a stablecoin try to reduce?", answer: "Price volatility", distractors: ["Wallet ownership", "Network size", "Block rewards"], topic: "crypto", conceptId: "stablecoin" },
-  { stem: "What is KYC mainly used for?", answer: "Identity verification", distractors: ["Mining setup", "NFT storage", "Token burning"], topic: "general", conceptId: "kyc" },
-  { stem: "What does a non-custodial wallet give you?", answer: "Control over your own keys", distractors: ["Guaranteed profits", "Free gas forever", "Automatic recovery by strangers"], topic: "crypto", conceptId: "non-custodial-wallet" },
-  { stem: "What does a custodial wallet usually give up?", answer: "Direct control of private keys", distractors: ["Internet access", "Transaction history", "Token prices"], topic: "crypto", conceptId: "custodial-wallet" },
+  { stem: "What is a wallet address mainly used for?", answer: "Receiving funds", distractors: ["Signing transactions", "Mining blocks", "Resetting passwords"], topic: "crypto", conceptId: "wallet-address", editorialVariants: ["What is a wallet address mostly for?", "Why do people share a wallet address?", "What do you use a wallet address for?", "A wallet address mainly helps you do what?"] },
+  { stem: "Where should a seed phrase be stored?", answer: "Privately offline", distractors: ["In public chat", "On a random website", "Inside a token name"], topic: "general", conceptId: "seed-phrase", editorialVariants: ["Where should you keep a seed phrase?", "What's the safest place for a seed phrase?", "How should a seed phrase be stored?", "Where does a seed phrase belong?"] },
+  { stem: "What does a block explorer help you check?", answer: "Transaction status", distractors: ["Phone battery", "Wallet theme", "Avatar rank"], topic: "crypto", conceptId: "block-explorer", editorialVariants: ["What do people check in a block explorer?", "A block explorer is useful for what?", "What can a block explorer confirm?", "Why open a block explorer?"] },
+  { stem: "What do testnet coins usually have?", answer: "No real market value", distractors: ["A one-dollar peg", "Guaranteed rewards", "Mainnet voting rights"], topic: "crypto", conceptId: "testnet", editorialVariants: ["Testnet coins are usually worth what?", "What value do testnet coins usually carry?", "How much real value do testnet coins have?", "Testnet coins normally have what market value?"] },
+  { stem: "What do mainnet assets usually represent?", answer: "Real value on a live network", distractors: ["Practice-only balances", "Local demo points", "Offline backups"], topic: "crypto", conceptId: "mainnet", editorialVariants: ["Mainnet assets usually represent what?", "What do mainnet tokens normally carry?", "On mainnet, assets usually have what?", "Mainnet balances typically represent what kind of value?"] },
+  { stem: "What does 2FA add to login?", answer: "An extra verification step", distractors: ["A second private key", "A lower gas fee", "A new wallet address"], topic: "general", conceptId: "two-factor-authentication", editorialVariants: ["What does 2FA do during login?", "Why does 2FA help when you sign in?", "2FA adds what to a login?", "What extra thing does 2FA require?"] },
+  { stem: "What does a phishing message often ask for?", answer: "Your seed phrase or passwords", distractors: ["Your app theme", "Your gas tracker", "Your favorite token"], topic: "general", conceptId: "phishing", editorialVariants: ["What do phishing scams usually try to get?", "A phishing message often wants what?", "What are phishing messages really after?", "What sensitive info do phishing scams chase?"] },
+  { stem: "Should a private key stay secret?", answer: "Yes, always", distractors: ["No, share it online", "Only after a trade", "Only on testnet"], topic: "general", conceptId: "private-key", editorialVariants: ["Should anyone else see your private key?", "Is it safe to share a private key?", "How private should a private key stay?", "Your private key should be kept how?"] },
+  { stem: "Can a public key be shared?", answer: "Yes, it is meant to be shared", distractors: ["No, never", "Only after staking", "Only through email"], topic: "crypto", conceptId: "public-key", editorialVariants: ["Is a public key safe to share?", "Can you share a public key openly?", "What about sharing a public key?", "A public key is meant to be what?"] },
+  { stem: "Which wallet type is best for long-term storage?", answer: "Cold wallet", distractors: ["Hot wallet", "Exchange banner", "Gas tracker"], topic: "crypto", conceptId: "cold-wallet", editorialVariants: ["Which wallet suits long-term storage best?", "For holding long term, which wallet fits best?", "What's best for long-term crypto storage?", "Which wallet is better for long holds?"] },
+  { stem: "Which wallet type is best for quick access?", answer: "Hot wallet", distractors: ["Cold wallet", "Paper receipt", "Block explorer"], topic: "crypto", conceptId: "hot-wallet", editorialVariants: ["Which wallet is best for fast access?", "For everyday use, which wallet fits best?", "What wallet is better for quick spending?", "Which wallet is easiest for fast access?"] },
+  { stem: "What can staking sometimes earn?", answer: "Rewards", distractors: ["Seed phrases", "Password resets", "Token burns"], topic: "crypto", conceptId: "staking", editorialVariants: ["What can staking earn you?", "Why do some people stake tokens?", "Staking may give you what?", "What might you receive from staking?"] },
+  { stem: "What does DeFi often try to remove?", answer: "Traditional intermediaries", distractors: ["Wallet addresses", "Block confirmations", "Token symbols"], topic: "crypto", conceptId: "defi", editorialVariants: ["DeFi tries to cut out what?", "What does DeFi usually reduce?", "DeFi is built to remove which middle layer?", "What does DeFi often work around?"] },
+  { stem: "Blockchain records are grouped into what?", answer: "Blocks", distractors: ["Folders", "Profile cards", "Widgets"], topic: "crypto", conceptId: "blockchain", editorialVariants: ["Blockchain records are stored in what?", "What are blockchain entries grouped into?", "A blockchain is built from what units?", "What chunks hold blockchain data?"] },
+  { stem: "What does a stablecoin try to reduce?", answer: "Price volatility", distractors: ["Wallet ownership", "Network size", "Block rewards"], topic: "crypto", conceptId: "stablecoin", editorialVariants: ["What does a stablecoin try to smooth out?", "Stablecoins mainly aim to reduce what?", "What problem are stablecoins designed to limit?", "Stablecoins try to cut down what?"] },
+  { stem: "What is KYC mainly used for?", answer: "Identity verification", distractors: ["Mining setup", "NFT storage", "Token burning"], topic: "general", conceptId: "kyc", editorialVariants: ["What is KYC mostly for?", "Why do platforms ask for KYC?", "KYC is used to confirm what?", "What does KYC mainly verify?"] },
+  { stem: "What does a non-custodial wallet give you?", answer: "Control over your own keys", distractors: ["Guaranteed profits", "Free gas forever", "Automatic recovery by strangers"], topic: "crypto", conceptId: "non-custodial-wallet", editorialVariants: ["What do you get with a non-custodial wallet?", "A non-custodial wallet gives you what control?", "What's the key benefit of non-custodial wallets?", "With a non-custodial wallet, who controls the keys?"] },
+  { stem: "What does a custodial wallet usually give up?", answer: "Direct control of private keys", distractors: ["Internet access", "Transaction history", "Token prices"], topic: "crypto", conceptId: "custodial-wallet", editorialVariants: ["What do you give up with a custodial wallet?", "A custodial wallet usually means losing what?", "What's the trade-off in custodial wallets?", "With custodial wallets, what control is reduced?"] },
 ];
 
 const easyYearFacts = [
@@ -279,14 +270,12 @@ const nuanceDistractorBanks = {
   ],
 };
 
-const createDefinitionQuestions = (facts, difficulty) => {
-  const pool = facts.map((fact) => fact.answer);
-
-  return facts.flatMap(({ term, answer, topic, conceptId }) => [
+const createDefinitionQuestions = (facts, difficulty) =>
+  facts.flatMap(({ term, answer, distractors, topic, conceptId }) => [
     buildQuestion({
       conceptId: conceptId ?? toConceptId(term),
       question: `What's ${term}?`,
-      options: buildOptionsFromPool(answer, pool, `${term}:def:1`),
+      options: buildOptionsFromDistractors(answer, distractors, `${term}:def:1`),
       answer,
       difficulty,
       topic,
@@ -294,7 +283,7 @@ const createDefinitionQuestions = (facts, difficulty) => {
     buildQuestion({
       conceptId: conceptId ?? toConceptId(term),
       question: `${term} means:`,
-      options: buildOptionsFromPool(answer, pool, `${term}:def:2`),
+      options: buildOptionsFromDistractors(answer, distractors, `${term}:def:2`),
       answer,
       difficulty,
       topic,
@@ -302,7 +291,7 @@ const createDefinitionQuestions = (facts, difficulty) => {
     buildQuestion({
       conceptId: conceptId ?? toConceptId(term),
       question: `Pick the best meaning of ${term}.`,
-      options: buildOptionsFromPool(answer, pool, `${term}:def:3`),
+      options: buildOptionsFromDistractors(answer, distractors, `${term}:def:3`),
       answer,
       difficulty,
       topic,
@@ -310,52 +299,33 @@ const createDefinitionQuestions = (facts, difficulty) => {
     buildQuestion({
       conceptId: conceptId ?? toConceptId(term),
       question: `In plain words, ${term} is:`,
-      options: buildOptionsFromPool(answer, pool, `${term}:def:4`),
+      options: buildOptionsFromDistractors(answer, distractors, `${term}:def:4`),
       answer,
       difficulty,
       topic,
     }),
   ]);
-};
 
 const createFactQuestions = (facts, difficulty, prefix) =>
-  facts.flatMap(({ stem, answer, distractors, topic, conceptId }) => {
+  facts.flatMap(({ stem, answer, distractors, topic, conceptId, editorialVariants }) => {
     const base = trimQuestionMark(stem);
-
-    return [
-      buildQuestion({
-        conceptId: conceptId ?? toConceptId(answer),
-        question: stem,
-        options: buildOptionsFromDistractors(answer, distractors, `${prefix}:${stem}:1`),
-        answer,
-        difficulty,
-        topic,
-      }),
-      buildQuestion({
-        conceptId: conceptId ?? toConceptId(answer),
-        question: `Quick one: ${base}?`,
-        options: buildOptionsFromDistractors(answer, distractors, `${prefix}:${stem}:2`),
-        answer,
-        difficulty,
-        topic,
-      }),
-      buildQuestion({
-        conceptId: conceptId ?? toConceptId(answer),
-        question: `Know this one: ${base}?`,
-        options: buildOptionsFromDistractors(answer, distractors, `${prefix}:${stem}:3`),
-        answer,
-        difficulty,
-        topic,
-      }),
-      buildQuestion({
-        conceptId: conceptId ?? toConceptId(answer),
-        question: `Fast check: ${base}?`,
-        options: buildOptionsFromDistractors(answer, distractors, `${prefix}:${stem}:4`),
-        answer,
-        difficulty,
-        topic,
-      }),
+    const prompts = editorialVariants ?? [
+      stem,
+      `Quick one: ${base}?`,
+      `Know this one: ${base}?`,
+      `Fast check: ${base}?`,
     ];
+
+    return prompts.map((prompt, index) =>
+      buildQuestion({
+        conceptId: conceptId ?? toConceptId(answer),
+        question: prompt,
+        options: buildOptionsFromDistractors(answer, distractors, `${prefix}:${stem}:${index + 1}`),
+        answer,
+        difficulty,
+        topic,
+      })
+    );
   });
 
 const createScenarioQuestions = (facts, difficulty) =>
@@ -596,3 +566,5 @@ export const getDailyQuiz = (date = new Date()) => {
     })
   );
 };
+
+

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Quiz from "./pages/Quiz";
@@ -27,7 +27,7 @@ function App() {
           <StreakProvider>
             <PowerUpProvider>
               <Router>
-                {/* ✅ Sync manager is inside all providers */}
+                {/* âœ… Sync manager is inside all providers */}
                 <GlobalSyncManager />
 
                 <Layout>

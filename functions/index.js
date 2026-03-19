@@ -1179,6 +1179,14 @@ app.use((req, res, next) => {
   return next();
 });
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: "PiQ Payment API",
+    status: "running",
+    timestamp: new Date().toISOString(),
+  });
+});
 app.post("/approvePayment", async (req, res) => {
   console.log("[api] /approvePayment called", {
     time: new Date().toISOString(),
@@ -1424,4 +1432,5 @@ exports.api = functions.https.onRequest(app);
 exports.computeUserBalance = computeUserBalance;
 exports.reconcileWalletPayment = reconcilePayment;
 exports.adminRetryWalletPayment = adminRetryPayment;
+
 
